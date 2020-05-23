@@ -200,6 +200,110 @@ struct Graph {
         }
         cout << "Hamiltonian path:";
         printHamiltonianPath(memo, vis, 0, 0);
+        cout << endl;
+        return 1;
+    }
+
+    bool dpHamiltonianCircuit(vector <bitset<20>> &memo, vector <bitset<20>> &vis, int mask, int pos, int las){
+        if(vis[mask][pos]) return memo[mask][pos];
+        vis[mask][pos] = 1;
+        if(mask == (1<<n)-1){ if(edge[pos].count(las)) { memo[mask].set(pos); return 1;} return 0;}
+        if(mask == 0){
+            for(int i = 0;i < n;i++){
+                if(dpHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, i)){
+                    memo[mask].set(pos);
+                    return 1;
+                }
+            }
+        }
+        for(int i = 0;i < n;i++){
+            if((mask&(1<<i))) continue;
+            if(!edge[pos].count(i)) continue;
+            if(dpHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, las)){
+                memo[mask].set(pos);
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    void printHamiltonianCircuit(vector <bitset<20>> &memo, vector <bitset<20>> &vis, int mask, int pos, int las){
+        if(mask != 0) cout << " " << dic->value(pos);
+        if(mask == (1<<n)-1){ cout << " " << dic->value(las); return; }
+        if(mask == 0){
+            for(int i = 0;i < n;i++){
+                if(dpHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, i)){
+                    printHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, i);
+                    return;
+                }
+            }
+        }
+        for(int i = 0;i < n;i++){
+            if((mask&(1<<i))) continue;
+            if(!edge[pos].count(i)) continue;
+            if(dpHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, las)){
+                printHamiltonianCircuit(memo, vis, (mask|(1<<i)), i, las);
+                return;
+            }
+        }
+    }
+
+    bool getHamiltonianCircuit(){
+        if(n > 23){
+            cout << "Too big :/" << endl;
+            return 0;
+        }
+        {
+            cout << endl;
+            cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+            cout << "Dirac analysis :" << endl;
+            cout << "Dirac's Theorem: Jika G = (V, E) graf sederhana dengan |V| >= 3 sehingga untuk setiap v anggota V, deg(v) >= |V|/2, maka G memiliki sirkuit Hamilton." << endl;
+            cout << "|V|/2 = " << n << "/2 = " << n/2 << ((n%2 ? ".5" : "")) << endl;
+            bool dirac = 1;
+            for(int i = 0;i < n;i++){
+                if(sz(edge[i])*2 < n){
+                    cout << "Dirac's theorem failed for the vertex \"" << dic->value(i) << "\" because " << sz(edge[i]) << " < " << n/2 << ((n%2 ? ".5" : ""))  << endl;
+                    dirac = 0;
+                }
+            }
+            if(dirac) cout << "Berdasarkan Dirac's theorem, This graph has a hamiltonian circuit" << endl;
+            else cout << "This proves nothing" << endl;
+            cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+            cout << endl;
+        }
+
+        {
+            cout << endl;
+            cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+            cout << "Ore analysis :" << endl;
+            cout << "Jika G = (V, E) graf sederhana dengan |V| >= 3 sehingga untuk setiap pasangan verteks (u, v) anggota V yang tidak bertetangga berlaku deg(u) + deg(v) >= |V|, maka G memiliki sirkuit Hamilton." << endl;
+            bool ore = 1;
+            for(int i = 0;i < n;i++){
+                for(int j = i+1;j < n;j++){
+                    if(edge[i].count(j) || edge[j].count(i)) continue;
+                    bool cur = (sz(edge[i]) + sz(edge[j]) >= n);
+                    cout << "deg(" << dic->value(i) << ") + deg(" << dic->value(j) << ")";
+                    printf(" = %d + %d = %d %s %d\n", sz(edge[i]), sz(edge[j]), sz(edge[i]) + sz(edge[j]), (cur ? ">=" : "<") , n);
+                    if(!cur){
+                        cout << "Wrong for pair (" << dic->value(i) << ", " << dic->value(j) << ")" << endl;
+                        ore = 0;
+                    }
+                }
+            }
+            if(ore) cout << "Berdasarkan Ore's theorem, This graph has a hamiltonian circuit" << endl;
+            else cout << "This proves nothing" << endl;
+            cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+            cout << endl;
+        }
+        vector <bitset<20>> memo(1LL<<n);
+        vector <bitset<20>> vis(1LL<<n);
+        if(!dpHamiltonianCircuit(memo, vis, 0, 0, 0)){
+            cout << "Hamiltonian Circuit not possible" << endl;
+            return 0;
+        }
+        cout << "Hamiltonian circuit:";
+        printHamiltonianCircuit(memo, vis, 0, 0, 0);
+        cout << endl;
         return 1;
     }
 };
@@ -218,7 +322,7 @@ int main(){
     g.getEulerPath();
     g.getEulerCircuit();
     g.getHamiltonianPath();
-    // g.getHamiltonianCircuit();
+    g.getHamiltonianCircuit();
     return 0;
 }
 
