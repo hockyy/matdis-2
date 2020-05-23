@@ -1,41 +1,14 @@
 /*
 Author : Hocky Yudhiono
 5/23/2020 8:48:30 AM
-
-1. You can sort the query if offline!
-2. Don't bring the dp remaining state when dfsing on DP on Tree.
-3. Try to reverse (Think from the back) if you stuck.
-4. Be careful when submitting Div. 2 D-F, dont waste it on stupid WAs.
-5. Try to reduce a problem
 */
 
-#include <algorithm>
-#include <iostream>
-#include <cstdlib>
-#include <cassert>
-#include <cstring>
-#include <iomanip>
-#include <cstdio>
-#include <limits>
-#include <string>
-#include <vector>
-#include <cmath>
-#include <deque>
-#include <queue>
-#include <stack>
-#include <map>
-#include <set>
+#include <bits/stdc++.h>
 using namespace std;
 
 typedef long long LL;
-typedef long long ll;
-typedef long double LD;
 typedef vector<int> vi;
-typedef pair<LL,LL> PLL;
-typedef pair<LL,int> PLI;
 typedef pair<int,int> PII;
-typedef pair<int,int> pii;
-typedef vector<vector<LL>> VVL;
 
 #define rep(i, a, b) for(int i = a; i < (b); ++i)
 #define trav(a, x) for(auto& a : x)
@@ -49,39 +22,6 @@ typedef vector<vector<LL>> VVL;
 #define remove erase
 #define fi first
 #define se second
-
-//If the time limit is strict, try not to use long double
-
-//Remember to undefine if the problem is interactive
-#define endl '\n'
-#define DEBUG(X) cout << ">>> DEBUG(" << __LINE__ << ") " << #X << " = " << (X) << endl
-
-const double EPS = 1e-9;
-const int INFMEM = 63;
-const int INF = 1061109567;
-const LL LINF = 4557430888798830399LL;
-const double DINF = numeric_limits<double>::infinity();
-const LL MOD = 1000000007;
-const int dx[8] = {0,0,1,-1,1,-1,1,-1};
-const int dy[8] = {1,-1,0,0,1,-1,-1,1};
-// Do dir^1 to get reverse direction
-const char dch[4] = {'R','L','D','U'};
-// const string ds[8] = {"E","W","S","N","SE","NW","SW","NE"};
-const double PI = 3.141592653589793;
-
-inline void open(string a){
-    freopen((a+".in").c_str(),"r",stdin);
-    freopen((a+".out").c_str(),"w",stdout);
-}
-
-inline void fasterios(){
-    //Do not use if interactive
-    ios_base::sync_with_stdio(0);
-    cin.tie(0); cout.tie(0);
-}
-
-#include <unordered_map>
-#include <unordered_set>
 
 template <class T>
 struct dictionary {
@@ -203,7 +143,64 @@ struct Graph {
         cout << endl;
         return 1;
     }
-    void getHamiltonianPath(){
+    bool dpHamiltonianPath(vector <bitset<20>> &memo, vector <bitset<20>> &vis, int mask, int pos){
+        if(vis[mask][pos]) return memo[mask][pos];
+        vis[mask][pos] = 1;
+        if(mask == (1<<n)-1){ memo[mask].set(pos); return 1; }
+        if(mask == 0){
+            for(int i = 0;i < n;i++){
+                if(dpHamiltonianPath(memo, vis, (mask|(1<<i)), i)){
+                    memo[mask].set(pos);
+                    return 1;
+                }
+            }
+        }
+        for(int i = 0;i < n;i++){
+            if((mask&(1<<i))) continue;
+            if(!edge[pos].count(i)) continue;
+            if(dpHamiltonianPath(memo, vis, (mask|(1<<i)), i)){
+                memo[mask].set(pos);
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    void printHamiltonianPath(vector <bitset<20>> &memo, vector <bitset<20>> &vis, int mask, int pos){
+        if(mask != 0) cout << " " << dic->value(pos);
+        if(mask == (1<<n)-1) return;
+        if(mask == 0){
+            for(int i = 0;i < n;i++){
+                if(dpHamiltonianPath(memo, vis, (mask|(1<<i)), i)){
+                    printHamiltonianPath(memo, vis, (mask|(1<<i)), i);
+                    return;
+                }
+            }
+        }
+        for(int i = 0;i < n;i++){
+            if((mask&(1<<i))) continue;
+            if(!edge[pos].count(i)) continue;
+            if(dpHamiltonianPath(memo, vis, (mask|(1<<i)), i)){
+                printHamiltonianPath(memo, vis, (mask|(1<<i)), i);
+                return;
+            }
+        }
+    }
+
+    bool getHamiltonianPath(){
+        if(n > 23){
+            cout << "Too big :/" << endl;
+            return 0;
+        }
+        vector <bitset<20>> memo(1LL<<n);
+        vector <bitset<20>> vis(1LL<<n);
+        if(!dpHamiltonianPath(memo, vis, 0, 0)){
+            cout << "Hamiltonian Path not possible" << endl;
+            return 0;
+        }
+        cout << "Hamiltonian path:";
+        printHamiltonianPath(memo, vis, 0, 0);
+        return 1;
     }
 };
 
@@ -220,7 +217,7 @@ int main(){
     for(auto e : edges) g.add_edge(e.fi, e.se);
     g.getEulerPath();
     g.getEulerCircuit();
-    // g.getHamiltonianPath();
+    g.getHamiltonianPath();
     // g.getHamiltonianCircuit();
     return 0;
 }
